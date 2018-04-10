@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public static class Extensions
 {
@@ -23,4 +24,19 @@ public static class Extensions
 			Object.Destroy(parent.transform.GetChild(i).gameObject);
 	}
 
+	public static T SelectRandom<T>(this List<T> list)
+	{
+		return list[Random.Range(0, list.Count)];
+	}
+
+	public static Vector3 WithinRandomRadius(this Vector3 v, float radius)
+	{
+		Vector2 rand = Random.insideUnitCircle;
+		return new Vector3(v.x + rand.x * radius, v.y, v.z + rand.y * radius);
+	}
+
+	public static bool LessThan(this Vector3 a, Vector3 b)
+	{
+		return ((a.x + a.y + a.z) < (b.x + b.y + b.z));
+	}
 }
