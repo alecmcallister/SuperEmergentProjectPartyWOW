@@ -111,6 +111,8 @@ public class Hunter : MonoBehaviour
 
 		terrainLayerMask = 1 << LayerMask.NameToLayer("Terrain");
 		hunterLayerMask = 1 << LayerMask.NameToLayer("Hunter");
+
+		ringRenderer.color = SimulationManager.Instance.ViewAOERings ? ringRenderer.color : Color.clear;
 	}
 
 	public void Init(HunterStats stats, Vector3 position, List<Hunter> parents = null)
@@ -158,6 +160,8 @@ public class Hunter : MonoBehaviour
 			mr.material.color = current;
 	}
 
+	float speedMultiplier = 1f;
+
 	public void Look()
 	{
 		List<Collider> seen = Physics.OverlapSphere(transform.position, SightDistance, hunterLayerMask).ToList();
@@ -197,21 +201,26 @@ public class Hunter : MonoBehaviour
 
 				if (Health < LowHealthThreshold)
 					newHeading *= -1f;
+
+				speedMultiplier = 1f;
 			}
 			else if (HunterType == HunterType.Group)
 			{
+				speedMultiplier = 0.5f;
 				//newHeading = toClosest;
 				newHeading = closest.CurrentHeading.normalized;
 				InCombat = false;
 			}
 			else
 			{
+				speedMultiplier = 0.5f;
 				newHeading = CurrentHeading.AddNoise(25f);
 				InCombat = false;
 			}
 		}
 		else
 		{
+			speedMultiplier = 0.5f;
 			newHeading = CurrentHeading.AddNoise(25f);
 		}
 
@@ -226,7 +235,7 @@ public class Hunter : MonoBehaviour
 			CurrentHeading = Vector3.Lerp(CurrentHeading, (transform.position - hitInfo.point).normalized, Time.deltaTime * 5f);
 		}
 
-		rb.AddForce(CurrentHeading.Flatten().normalized * Acceleration, ForceMode.Force);
+		rb.AddForce(CurrentHeading.Flatten().normalized * Acceleration * speedMultiplier, ForceMode.Force);
 
 		if (rb.velocity.magnitude > MaxSpeed)
 		{
@@ -419,7 +428,7 @@ public class HunterStats
 	[Tooltip("If HP falls below this, the hunter will run away from combat.")]
 	public float LowHealthThreshold;
 
-	[Range(1f, 10f)]
+	[Range(0f, 10f)]
 	[Tooltip("How much HP is regenerated each tick (governed by the environment).")]
 	public float RegenAmount;
 
