@@ -4,16 +4,10 @@ using UnityEngine;
 
 public class SimulationManager : Singleton<SimulationManager>
 {
-	GameObject groupHunterPrefab;
-	GameObject soloHunterPrefab;
 
 	#region Simulation Properties
 
 	public bool ViewAOERings = true;
-
-	[Tooltip("The list of all available spawn points (to be filled in by the user). Will " +
-			 "select a spawn point at random when instantiating hunters in the scene.")]
-	public List<Transform> SpawnPoints;
 
 	[Range(0f, 30f)]
 	[Tooltip("How far away the hunters can be spawned from the center of the spawn point.")]
@@ -27,23 +21,37 @@ public class SimulationManager : Singleton<SimulationManager>
 	[Tooltip("How many group hunters to start the simulation with.")]
 	public int GroupHunterAmount = 10;
 
-	[Space]
 	[Header("Solo Hunter Properties")]
 	public HunterStats SoloStats;
 
-	[Space]
 	[Header("Group Hunter Properties")]
 	public HunterStats GroupStats;
 
-	#endregion
-
+	[Space]
 	public Gradient SoloDamageGradient;
 	public Gradient GroupDamageGradient;
+
+	GameObject groupHunterPrefab;
+	GameObject soloHunterPrefab;
+
+	#endregion
+
+	Transform SpawnParent;
+	List<Transform> SpawnPoints = new List<Transform>();
 
 	void Awake()
 	{
 		groupHunterPrefab = Resources.Load<GameObject>("Prefabs/GroupHunter");
 		soloHunterPrefab = Resources.Load<GameObject>("Prefabs/SoloHunter");
+
+		SpawnParent = GameObject.Find("SpawnParent").transform;
+
+		for (int i = 0; i < SpawnParent.childCount; i++)
+		{
+			Transform child = SpawnParent.GetChild(i);
+			if (child.name == "HunterSpawnPoint")
+				SpawnPoints.Add(child);
+		}
 	}
 
 	void Start()
@@ -52,11 +60,34 @@ public class SimulationManager : Singleton<SimulationManager>
 		SpawnRandom(GroupHunterAmount, new HunterStats(GroupStats));
 	}
 
+	void Update()
+	{
+		if (Input.GetKeyDown(KeyCode.S))
+			SpawnRandom(1, SoloStats);
+
+		if (Input.GetKeyDown(KeyCode.G))
+			SpawnRandom(1, GroupStats);
+	}
+
 	public Hunter SpawnHunter(HunterStats stats, Vector3 position, List<Hunter> parents = null)
 	{
 		Hunter hunter = Instantiate(stats.HunterType == HunterType.Solo ? soloHunterPrefab : groupHunterPrefab, transform).GetComponent<Hunter>();
+		if (parents != null)
+		{
+			stats.Attack = Mathf.Max(parents[0].Attack, parents[1].Attack) + Random.Range(-0.5f, 0.5f);
+		}
 		hunter.Init(stats, position, parents);
+		hunter.HunterEvent += HunterEvent;
+		UIManager.Instance.UpdateHunterText();
 		return hunter;
+	}
+
+	public void HunterEvent(Hunter hunter, HunterEventType type)
+	{
+		if (type == HunterEventType.Died)
+		{
+			UIManager.Instance.UpdateHunterText();
+		}
 	}
 
 	public List<Hunter> SpawnRandom(int amount, HunterStats stats, List<Hunter> parents = null)
@@ -76,6 +107,8 @@ public class SimulationManager : Singleton<SimulationManager>
 	public void MakeABaby(Hunter a, Hunter b)
 	{
 		Vector3 pos = a.transform.position + (b.transform.position - a.transform.position) * 0.5f;
-		SpawnHunter((a.HunterType == HunterType.Group) ? GroupStats : SoloStats, pos, new List<Hunter>() { a, b });
+		Hunter baby = SpawnHunter((a.HunterType == HunterType.Group) ? GroupStats : SoloStats, pos, new List<Hunter>() { a, b });
+		float health = Mathf.Max(a.Health, b.Health);
+		baby.TakeDamage(baby.Health - health, true);
 	}
 }

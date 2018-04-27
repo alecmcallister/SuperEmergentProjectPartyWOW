@@ -39,4 +39,13 @@ public static class Extensions
 	{
 		return ((a.x + a.y + a.z) < (b.x + b.y + b.z));
 	}
+
+	public static Rect ToScreenSpace(this RectTransform rectTransform)
+	{
+		Vector2 size = Vector2.Scale(rectTransform.rect.size, rectTransform.lossyScale);
+		Rect rect = new Rect(rectTransform.position.x, Screen.height - rectTransform.position.y, size.x, size.y);
+		rect.x -= (rectTransform.pivot.x * size.x);
+		rect.y -= ((1.0f - rectTransform.pivot.y) * size.y);
+		return rect;
+	}
 }
