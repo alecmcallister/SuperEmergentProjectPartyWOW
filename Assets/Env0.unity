@@ -1111,7 +1111,7 @@ MonoBehaviour:
   SoloStats:
     HunterType: 0
     Attack: 4
-    Health: 100
+    Health: 50
     LowHealthThreshold: 10
     Speed: 40
     SightDistance: 20
