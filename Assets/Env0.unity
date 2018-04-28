@@ -601,7 +601,7 @@ Prefab:
     - target: {fileID: 224827756076154328, guid: 9b27a20d0085eb843be011da77610674,
         type: 2}
       propertyPath: m_AnchoredPosition.y
-      value: -227
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 224827756076154328, guid: 9b27a20d0085eb843be011da77610674,
         type: 2}
@@ -611,7 +611,7 @@ Prefab:
     - target: {fileID: 224827756076154328, guid: 9b27a20d0085eb843be011da77610674,
         type: 2}
       propertyPath: m_SizeDelta.y
-      value: 454
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 224573308519957472, guid: 9b27a20d0085eb843be011da77610674,
         type: 2}
@@ -631,7 +631,7 @@ Prefab:
     - target: {fileID: 224573308519957472, guid: 9b27a20d0085eb843be011da77610674,
         type: 2}
       propertyPath: m_AnchoredPosition.y
-      value: -681
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 224573308519957472, guid: 9b27a20d0085eb843be011da77610674,
         type: 2}
@@ -641,7 +641,7 @@ Prefab:
     - target: {fileID: 224573308519957472, guid: 9b27a20d0085eb843be011da77610674,
         type: 2}
       propertyPath: m_SizeDelta.y
-      value: 454
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 223685206606123232, guid: 9b27a20d0085eb843be011da77610674,
         type: 2}
@@ -1106,27 +1106,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ViewAOERings: 0
   SpawnPointRadius: 30
-  SoloHunterAmount: 2
+  SoloHunterAmount: 4
   GroupHunterAmount: 35
   SoloStats:
     HunterType: 0
     Attack: 4
-    Health: 50
+    Health: 100
     LowHealthThreshold: 10
-    RegenAmount: 0
     Speed: 40
     SightDistance: 20
-    ProcreationProbability: 0.75
+    ProcreationProbability: 0.9
     ProcreationTime: 6
   GroupStats:
     HunterType: 1
     Attack: 1
     Health: 20
     LowHealthThreshold: 6
-    RegenAmount: 0
     Speed: 60
     SightDistance: 15
-    ProcreationProbability: 0.35
+    ProcreationProbability: 0.4
     ProcreationTime: 2
   SoloDamageGradient:
     serializedVersion: 2
@@ -1197,12 +1195,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a958aa3ba44a40e45937dd92f5885469, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  RegenInterval: 2
-  InitialRegenDelay: 5
   DoResourcesRespawn: 1
   ResourceHP: 10
   MaxResourceAbundance: 25
-  ResourceRespawnInterval: 1
+  ResourceRespawnInterval: 0.75
   FoodSpawnPointRadius: 20
   HunterDecayAmount: 1
   HunterDecayInterval: 3
@@ -1272,6 +1268,10 @@ Prefab:
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 4c6ecd77bcdca3146b339eda18c54e5b, type: 3}
   m_IsPrefabParent: 0
+--- !u!4 &1550135685 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400000, guid: 4c6ecd77bcdca3146b339eda18c54e5b, type: 3}
+  m_PrefabInternal: {fileID: 1550135684}
 --- !u!1 &1655741427
 GameObject:
   m_ObjectHideFlags: 0
@@ -1337,6 +1337,57 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 67.3, y: -41.8, z: 0}
+--- !u!1 &1700356020
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1700356023}
+  - component: {fileID: 1700356022}
+  - component: {fileID: 1700356021}
+  m_Layer: 8
+  m_Name: Roof
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!64 &1700356021
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1700356020}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 0
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!33 &1700356022
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1700356020}
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1700356023
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1700356020}
+  m_LocalRotation: {x: -3.7493994e-33, y: -6.123234e-17, z: 1, w: -6.123234e-17}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalScale: {x: 0.8333334, y: 0.033333335, z: 0.8333334}
+  m_Children: []
+  m_Father: {fileID: 1550135685}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
 --- !u!1 &1937759365
 GameObject:
   m_ObjectHideFlags: 0

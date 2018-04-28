@@ -193,6 +193,10 @@ MeshCollider:
   m_CookingOptions: 14
   m_SkinWidth: 0.01
   m_Mesh: {fileID: 4300000, guid: 3980c9fadd04a8f4b8df0f45e8801407, type: 3}
+--- !u!4 &93888566 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 400000, guid: 3980c9fadd04a8f4b8df0f45e8801407, type: 3}
+  m_PrefabInternal: {fileID: 93888563}
 --- !u!1 &209329679
 GameObject:
   m_ObjectHideFlags: 0
@@ -362,6 +366,57 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 361539747}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &369836718
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 369836721}
+  - component: {fileID: 369836720}
+  - component: {fileID: 369836719}
+  m_Layer: 8
+  m_Name: Roof
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!64 &369836719
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 369836718}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 0
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!33 &369836720
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 369836718}
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &369836721
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 369836718}
+  m_LocalRotation: {x: 1, y: -0, z: -0, w: 0}
+  m_LocalPosition: {x: 0, y: 1.5, z: 0}
+  m_LocalScale: {x: 0.8333334, y: 0.05, z: 0.8333334}
+  m_Children: []
+  m_Father: {fileID: 93888566}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
 --- !u!1 &814682012
 GameObject:
   m_ObjectHideFlags: 0
@@ -940,12 +995,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a958aa3ba44a40e45937dd92f5885469, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  RegenInterval: 2
-  InitialRegenDelay: 5
   DoResourcesRespawn: 1
   ResourceHP: 5
   MaxResourceAbundance: 25
-  ResourceRespawnInterval: 1
+  ResourceRespawnInterval: 0.5
   FoodSpawnPointRadius: 20
   HunterDecayAmount: 1
   HunterDecayInterval: 3
@@ -969,7 +1022,6 @@ MonoBehaviour:
     Attack: 4
     Health: 50
     LowHealthThreshold: 10
-    RegenAmount: 0
     Speed: 30
     SightDistance: 20
     ProcreationProbability: 0.75
@@ -979,10 +1031,9 @@ MonoBehaviour:
     Attack: 1
     Health: 20
     LowHealthThreshold: 6
-    RegenAmount: 0
     Speed: 60
     SightDistance: 15
-    ProcreationProbability: 0.3
+    ProcreationProbability: 0.4
     ProcreationTime: 3
   SoloDamageGradient:
     serializedVersion: 2

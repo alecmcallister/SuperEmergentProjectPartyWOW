@@ -8,13 +8,11 @@ using UnityEngine.UI;
 [RequireComponent(typeof(Rigidbody), typeof(SphereCollider))]
 public class Hunter : MonoBehaviour
 {
+	public event Action<Hunter, HunterEventType> HunterEvent = new Action<Hunter, HunterEventType>((h, e) => { });
+
 	public static List<Hunter> Hunters;
 	public static int SoloHunters = 0;
 	public static int GroupHunters = 0;
-
-	public event Action<Hunter, HunterEventType> HunterEvent = new Action<Hunter, HunterEventType>((h, e) => { });
-
-	public List<Hunter> Parents = new List<Hunter>();
 
 	#region Here we go
 
@@ -34,10 +32,6 @@ public class Hunter : MonoBehaviour
 	[Range(1f, 20f)]
 	[Tooltip("If HP falls below this, the hunter will run away from combat.")]
 	public float LowHealthThreshold;
-
-	[Range(1f, 10f)]
-	[Tooltip("How much HP is regenerated each tick (governed by the environment).")]
-	public float RegenAmount;
 
 	#endregion
 
@@ -67,35 +61,45 @@ public class Hunter : MonoBehaviour
 
 	#endregion
 
+	public List<Hunter> Parents = new List<Hunter>();
+
 	Rigidbody rb;
 	SphereCollider sp;
 
 	public bool InCombat { get; private set; }
 
 	float sizeMultiplier = 0.3f;
+	float speedMultiplier = 0.5f;
+	float timeMultiplier = 1f;
+
 	float maxHealth;
 
 	public Vector3 CurrentHeading = Vector3.forward;
 	int terrainLayerMask;
 	int hunterLayerMask;
 	int foodLayerMask;
-	float speedMultiplier = 0.5f;
-
-	Coroutine regenCoroutine;
 
 	Transform areaOfEffectRing;
 	SpriteRenderer ringRenderer;
 
 	Vector3 areaOfEffectBaseScale = Vector3.one * 0.4f;
 
-	Vector3 minSize = Vector3.one * 0.2f;
-
 	MeshRenderer mr;
 	Color originalColor;
 
-
 	RectTransform hunterUI;
 	Image hunterUIBar;
+
+	bool iframe = false;
+
+	float cooldowntime = 2f;
+
+	bool canProcreate = true;
+
+	Coroutine procreationCoroutine;
+
+
+	#region Awake / Destroy
 
 	void Awake()
 	{
@@ -124,38 +128,6 @@ public class Hunter : MonoBehaviour
 		hunterUIBar = hunterUI.GetChild(0).GetComponent<Image>();
 	}
 
-	public void Init(HunterStats stats, Vector3 position, List<Hunter> parents = null)
-	{
-		HunterType = stats.HunterType;
-		Attack = stats.Attack;
-		Health = stats.Health;
-		LowHealthThreshold = stats.LowHealthThreshold;
-		RegenAmount = stats.RegenAmount;
-		Speed = stats.Speed;
-		SightDistance = stats.SightDistance;
-		ProcreationProbability = stats.ProcreationProbability;
-		ProcreationTime = stats.ProcreationTime;
-
-		transform.position = position;
-
-		if (parents != null)
-			Parents = parents;
-
-		maxHealth = stats.Health;
-
-		InitialSize();
-
-		switch (HunterType)
-		{
-			case HunterType.Solo:
-				SoloHunters += 1;
-				break;
-			case HunterType.Group:
-				GroupHunters += 1;
-				break;
-		}
-	}
-
 	void OnDestroy()
 	{
 		StopAllCoroutines();
@@ -168,6 +140,10 @@ public class Hunter : MonoBehaviour
 
 		Hunters.Remove(this);
 	}
+
+	#endregion
+
+	#region Update
 
 	void Update()
 	{
@@ -204,6 +180,46 @@ public class Hunter : MonoBehaviour
 			hunterUIBar.color = Color.green.WithAlpha(200f);
 	}
 
+	#endregion
+
+	#region Init
+
+	public void Init(HunterStats stats, Vector3 position, List<Hunter> parents = null)
+	{
+		HunterType = stats.HunterType;
+		Attack = stats.Attack;
+		Health = stats.Health;
+		LowHealthThreshold = stats.LowHealthThreshold;
+		Speed = stats.Speed;
+		SightDistance = stats.SightDistance;
+		ProcreationProbability = stats.ProcreationProbability;
+		ProcreationTime = stats.ProcreationTime;
+
+		transform.position = position;
+
+		if (parents != null)
+			Parents = parents;
+
+		maxHealth = stats.Health;
+
+		rb.mass = Health * sizeMultiplier;
+		transform.localScale = Vector3.one * rb.mass;
+		areaOfEffectRing.localScale = areaOfEffectBaseScale * SightDistance;
+
+		switch (HunterType)
+		{
+			case HunterType.Solo:
+				SoloHunters += 1;
+				break;
+			case HunterType.Group:
+				GroupHunters += 1;
+				break;
+		}
+	}
+
+	#endregion
+
+	#region Look / Move
 
 	public void Look()
 	{
@@ -253,13 +269,8 @@ public class Hunter : MonoBehaviour
 				if (Health < LowHealthThreshold || (allies < 4 && HunterType == HunterType.Group))
 					newHeading *= -1f;
 
-				else
-				{
-					if (isGrounded() && HunterType == HunterType.Group)
-					{
-						rb.AddForce((closest.transform.position - transform.position).normalized * 1000f, ForceMode.Impulse);
-					}
-				}
+				else if (isGrounded() && HunterType == HunterType.Group)
+					rb.AddForce((closest.transform.position - transform.position).normalized * 1000f, ForceMode.Impulse);
 
 				speedMultiplier = 1f;
 			}
@@ -296,41 +307,30 @@ public class Hunter : MonoBehaviour
 		CurrentHeading = Vector3.Lerp(CurrentHeading, newHeading, Time.deltaTime * UnityEngine.Random.Range(3f, 10f));
 	}
 
-	float timeMultiplier = 1f;
-
 	public void Move()
 	{
 		RaycastHit hitInfo;
+
 		if (Physics.Raycast(transform.position, CurrentHeading.Flatten().normalized, out hitInfo, SightDistance, terrainLayerMask))
-		{
 			CurrentHeading = Vector3.Lerp(CurrentHeading, (transform.position - hitInfo.point).normalized, Time.deltaTime * 5f * UnityEngine.Random.Range(0.5f, 1.5f));
-		}
 
 		rb.velocity = Vector3.Lerp(rb.velocity + Vector3.down * 0.25f, CurrentHeading.Flatten().normalized * Speed * speedMultiplier, Time.deltaTime * timeMultiplier);
-		//rb.velocity = Vector3.Lerp(rb.velocity, (CurrentHeading.Flatten() + Vector3.down * 0.5f).normalized * Speed * speedMultiplier, Time.deltaTime * timeMultiplier);
 
 		if (rb.velocity.magnitude > Speed)
-		{
 			rb.velocity *= (Speed / rb.velocity.magnitude);
-		}
 
 		areaOfEffectRing.position = transform.position;
 		areaOfEffectRing.forward = CurrentHeading.normalized;
 	}
+
+	#endregion
 
 	bool isGrounded()
 	{
 		return Physics.Raycast(transform.position, -Vector3.up, sp.bounds.extents.y + 0.1f);
 	}
 
-	public void InitialSize()
-	{
-		rb.mass = Health * sizeMultiplier;
-
-		transform.localScale = Vector3.one * rb.mass;
-
-		areaOfEffectRing.localScale = areaOfEffectBaseScale * SightDistance;
-	}
+	#region Collision / Trigger
 
 	void OnCollisionEnter(Collision other)
 	{
@@ -347,7 +347,6 @@ public class Hunter : MonoBehaviour
 			}
 			else
 			{
-				//Health = (otherHunter.Health + Health) / 2f;
 				if (canProcreate)
 				{
 					if (procreationCoroutine != null)
@@ -357,14 +356,6 @@ public class Hunter : MonoBehaviour
 				}
 			}
 		}
-	}
-
-	void GainStats(Hunter other)
-	{
-		Health += 5f;
-
-		if (Health > maxHealth)
-			Health = maxHealth;
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -378,13 +369,9 @@ public class Hunter : MonoBehaviour
 		}
 	}
 
-	public void Eat(float hp)
-	{
-		Health += hp;
+	#endregion
 
-		if (Health > maxHealth)
-			Health = maxHealth;
-	}
+	#region Damage / Died
 
 	public void TakeDamage(float damage, bool ignoreiframe = false, Action<Hunter> callback = null)
 	{
@@ -407,65 +394,51 @@ public class Hunter : MonoBehaviour
 		else
 		{
 			HunterEvent(this, HunterEventType.Damaged);
-
-			if (regenCoroutine != null)
-				StopCoroutine(regenCoroutine);
-
-			regenCoroutine = StartCoroutine(Regen());
 		}
 	}
 
-	void DoHitHighlight()
+	void Died()
 	{
-		iframe = true;
-
-		LeanTween.color(gameObject, Color.white, 0.1f).setOnUpdate((Color val) =>
+		switch (HunterType)
 		{
-			mr.material.SetColor("_Color", val);
-		}).setEase(LeanTweenType.easeInOutSine).setOnComplete(() =>
-		{
-			LeanTween.color(gameObject, GetCurrentColor(), 0.2f).setOnUpdate((Color val) =>
-			{
-				mr.material.SetColor("_Color", val);
-			}).setEase(LeanTweenType.easeInOutSine).setOnComplete(() => { iframe = false; });
-		});
-	}
-
-	Color GetCurrentColor()
-	{
-		Gradient gradient = (HunterType == HunterType.Solo) ? SimulationManager.Instance.SoloDamageGradient : SimulationManager.Instance.GroupDamageGradient;
-		return gradient.Evaluate(Health / maxHealth);
-	}
-
-	bool iframe = false;
-
-	IEnumerator Regen()
-	{
-		yield return new WaitForSeconds(Environment.Instance.InitialRegenDelay);
-
-		while (Health < maxHealth)
-		{
-			Health += RegenAmount;
-
-			if (Health > maxHealth)
-				Health = maxHealth;
-
-			yield return new WaitForSeconds(Environment.Instance.RegenInterval);
+			case HunterType.Solo:
+				SoloHunters -= 1;
+				break;
+			case HunterType.Group:
+				GroupHunters -= 1;
+				break;
 		}
+
+		HunterEvent(this, HunterEventType.Died);
+		Destroy(gameObject);
 	}
 
-	float cooldowntime = 2f;
+	#endregion
 
-	bool canProcreate = true;
+	#region Eating / Stat gain
 
-	Coroutine procreationCoroutine;
+	public void Eat(float hp)
+	{
+		Health += hp;
+
+		if (Health > maxHealth)
+			Health = maxHealth;
+	}
+
+	void GainStats(Hunter other)
+	{
+		Health += 5f;
+
+		if (Health > maxHealth)
+			Health = maxHealth;
+	}
+
+	#endregion
+
+	#region Procreating
 
 	IEnumerator Procreate(Hunter other)
 	{
-		//if (Parents != null)
-		//	if (Parents.Contains(other))
-		//		yield break;
-
 		canProcreate = false;
 
 		float to = Time.time + ProcreationTime;
@@ -498,21 +471,34 @@ public class Hunter : MonoBehaviour
 		canProcreate = true;
 	}
 
-	void Died()
-	{
-		switch (HunterType)
-		{
-			case HunterType.Solo:
-				SoloHunters -= 1;
-				break;
-			case HunterType.Group:
-				GroupHunters -= 1;
-				break;
-		}
+	#endregion
 
-		HunterEvent(this, HunterEventType.Died);
-		Destroy(gameObject);
+	#region Highlighting
+
+	void DoHitHighlight()
+	{
+		iframe = true;
+
+		LeanTween.color(gameObject, Color.white, 0.1f).setOnUpdate((Color val) =>
+		{
+			mr.material.SetColor("_Color", val);
+		}).setEase(LeanTweenType.easeInOutSine).setOnComplete(() =>
+		{
+			LeanTween.color(gameObject, GetCurrentColor(), 0.2f).setOnUpdate((Color val) =>
+			{
+				mr.material.SetColor("_Color", val);
+			}).setEase(LeanTweenType.easeInOutSine).setOnComplete(() => { iframe = false; });
+		});
 	}
+
+	Color GetCurrentColor()
+	{
+		Gradient gradient = (HunterType == HunterType.Solo) ? SimulationManager.Instance.SoloDamageGradient : SimulationManager.Instance.GroupDamageGradient;
+		return gradient.Evaluate(Health / maxHealth);
+	}
+
+	#endregion
+
 }
 
 [Serializable]
@@ -534,10 +520,6 @@ public class HunterStats
 	[Range(1f, 20f)]
 	[Tooltip("If HP falls below this, the hunter will run away from combat.")]
 	public float LowHealthThreshold;
-
-	[Range(0f, 10f)]
-	[Tooltip("How much HP is regenerated each tick (governed by the environment).")]
-	public float RegenAmount;
 
 	#endregion
 
@@ -571,7 +553,6 @@ public class HunterStats
 		Attack = stats.Attack;
 		Health = stats.Health;
 		LowHealthThreshold = stats.LowHealthThreshold;
-		RegenAmount = stats.RegenAmount;
 		Speed = stats.Speed;
 		SightDistance = stats.SightDistance;
 		ProcreationProbability = stats.ProcreationProbability;

@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class SimulationManager : Singleton<SimulationManager>
 {
-
 	#region Simulation Properties
 
 	public bool ViewAOERings = true;
@@ -74,7 +73,7 @@ public class SimulationManager : Singleton<SimulationManager>
 		Hunter hunter = Instantiate(stats.HunterType == HunterType.Solo ? soloHunterPrefab : groupHunterPrefab, transform).GetComponent<Hunter>();
 		if (parents != null)
 		{
-			stats.Attack = Mathf.Max(parents[0].Attack, parents[1].Attack) + Random.Range(-0.5f, 0.5f);
+			stats.Attack = Mathf.Min(Mathf.Max(parents[0].Attack, parents[1].Attack) + Random.Range(-0.5f, 0.25f), stats.Attack + 5f);
 		}
 		hunter.Init(stats, position, parents);
 		hunter.HunterEvent += HunterEvent;
@@ -110,5 +109,6 @@ public class SimulationManager : Singleton<SimulationManager>
 		Hunter baby = SpawnHunter((a.HunterType == HunterType.Group) ? GroupStats : SoloStats, pos, new List<Hunter>() { a, b });
 		float health = Mathf.Max(a.Health, b.Health);
 		baby.TakeDamage(baby.Health - health, true);
+		baby.CurrentHeading = a.CurrentHeading;
 	}
 }
